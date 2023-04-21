@@ -3,24 +3,32 @@ import React, { useState } from "react";
 import { Link , useNavigate } from 'react-router-dom';
 import "./index.css";
 
-export default function LoginForm() {
+const LoginForm =()=> {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loginStatus, setLoginStatus] = useState("");
     const navigate = useNavigate();
 
-    const [phone, setPhone] = useState("");
-
-    const handleSubmit = (e) => {
-        axios
-            .post(`http://localhost:8000/sendotp`, { phoneNumber: phone })
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+            axios.post('http://localhost:8000/sendotp',{
+                mode: 'no-cors',
+                email: email,
+                password: password
+            })
             .then((response) => {
-                console.log(response.data);
-                if (response.data) {
+                if(response.data.message){
+                    setLoginStatus(response.data.message);
                     console.warn(response);
-                    navigate("/verifyOtp");
-                } else {
+                }else{
+                    navigate("/manager-dashboard");
                     console.warn(response);
                 }
+            })
+            .catch(err => {
+            console.error(err);
             });
-    };
+        }
 
     return (
         <div className="container-fluid">
@@ -30,23 +38,28 @@ export default function LoginForm() {
                     <div className="col-md-6 cust-bg">
                         <form method="post">
                             <div className="login-wrap">
-                                <Link className="back-arrow">arrow</Link>
-                                <h3>May I have your phone number?</h3>
-                                <p>asdfmkasmldfmnmkanwekjjnnfr awnenfkjanwefknkjane asjnfkjnwkejnfakjwenf</p>
-
+                                <h3>Login Form</h3>
+                             
                                 <div class="form-group">
-                                    <span>+91</span>
+                                    <span>Email</span>
                                     <input type="text"
                                         class="form-control"
                                         id="exampleInputEmail1"
-                                        onChange={(e) => setPhone(e.target.value)} value={phone}
+                                        onChange={(e) => setEmail(e.target.value)} value={email}
                                         aria-describedby="emailHelp" />
                                 </div>
 
-                                <button onClick={(e) => handleSubmit(e)}>Login</button>
+                                <div class="form-group">
+                                    <span>Password</span>
+                                    <input type="password"
+                                        class="form-control"
+                                        id="exampleInputEmail1"
+                                        onChange={(e) => setPassword(e.target.value)} value={password}
+                                        aria-describedby="emailHelp" />
+                                </div>
 
                                 <div className="sps-sign">
-                                    <Link to="/forget-password" className="btn-btn" >next</Link>
+                                    <button className="btn-btn" onClick={(e) => handleSubmit(e)} >Login</button>
                                 </div>
 
                             </div>
@@ -58,3 +71,6 @@ export default function LoginForm() {
         </div>
     );
 }
+
+
+export default LoginForm;

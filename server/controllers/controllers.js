@@ -1,148 +1,130 @@
 require("dotenv").config({ debug: process.env.DEBUG });
 const jwt = require("jsonwebtoken");
 const expressJwt = require("express-jwt");
-
-const Otp = require("../models/userOtp.js");
+const Cities = require("../models/cities.js");
 const User = require("../models/user.js");
-
-
-const { generateOTP, fast2sms } = require("../utils/otp.js");
-
 const mongoose = require("mongoose");
 
-// ------------ login with phoneNumber otp ----------------------------------
+exports.registration = (req, res) => {
+  const uname = req.param("uname");
+  const pword = req.param("pword");
+  const name = req.param("fullName");
+  const email = req.param("email");
+  const state = req.param("state");
+  const city = req.param("city");
 
-exports.loginWithPhoneOtp = async (req, res, next) => {
-  try {
-    const { phoneNumber } = req.body;
-    let user
-    user = await User.findOne({ phoneNumber });
-    console.log("num ", req.body)
+  if (!(uname && pword && name && email && state && city))
+    res.json({ msg: "All fields are required" });
 
-    if (!user) {
-      // create new user
-      const createUser = new User({
-        phoneNumber,
-        // name
-      });
-
-      // save user
-      user = await createUser.save();
-      console.log("ahjjhahvhjav", user)
+  User.countDocuments({ email: email, username: uname }, (err, c) => {
+    if (c >= 1) {
+      return res
+        .status(200)
+        .json({ msg: "Username or email address already exits" });
+    } else {
+      return User.create(
+        {
+          fullName: name,
+          username: uname,
+          email,
+          password: pword,
+          state,
+          city,
+        },
+        (err, r) => {
+          if (err) {
+            console.log(err);
+            return res.json({ msg: false });
+          } else {
+            console.log(r);
+            return res.json({ msg: true });
+          }
+        }
+      );
     }
-
-    res.status(201).json({
-      type: "success",
-      message: "OTP sended to your registered phoneNumber number",
-      data: {
-        userId: user._id,
-      },
-    });
-
-    // generate otp
-    const otp = generateOTP(6);
-    // save otp to user collection
-
-    const queryObject = { _id: user._id };
-    const updateObject = {
-      otp: otp
-    };
-
-    await User.findByIdAndUpdate(queryObject, updateObject);
-
-    const smsRes = await fast2sms(
-      {
-        message: `Your OTP is ${otp}`,
-        contactNumber: user.phoneNumber,
-      },
-      next
-    );
-    console.log("smsRes", smsRes)
-  } catch (error) {
-    // next(error);
-    console.log(error)
-  }
+  });
 };
 
+exports.login = (req, res) => {
+  const uname = req.param("uname");
+  const pword = req.param("pword");
 
-// ---------------------- verify phoneNumber otp -------------------------
-
-exports.verifyPhoneOtp = async (req, res, next) => {
-  try {
-    const { otp } = req.body;
-    const { userId } = req.body;
-
-    console.log("verify", otp, userId);
-    const user = await User.findById(userId);
-    if (!user) {
-      next({ status: 400, message: "USER_NOT_FOUND_ERR" });
-      return;
+  // var token = jwt.sign({foo:'bar'}, 'shhhh');
+  User.find({ username: uname }, (err, user) => {
+    if (err) {
+      return res.status(200).json({ msg: "Error: Something happened" });
     }
-
-    if (user.otp !== otp) {
-      next({ status: 400, message: "INCORRECT_OTP_ERR" });
-      return;
+    let data = JSON.parse(JSON.stringify(user));
+    try {
+      console.log(data[0].password);
+    } catch (e) {
+      return res.status(200).json({ msg: "User Doesn't Exits" });
     }
-
-    if (user.otp === otp) {
-
-      res.status(200).json({
-        type: "success",
-        message: "OTP verified successfully",
-        data: {
-          // token,
-          userId: user._id,
+    if (data[0].password != pword) {
+      return res.status(200).send("Username or password incorrect");
+    } else {
+      const token = jwt.sign({ _id: data[0]._id }, process.env.SECRET);
+      res.cookie("token", token, { expire: new Date() + 333 });
+      return res.status(200).json({
+        token,
+        user: {
+          name: data[0].fullName,
+          email: data[0].email,
+          username: data[0].username,
+          state: data[0].state,
+          city: data[0].city,
         },
       });
     }
-  } catch (error) {
-    console.log(error);
-  }
+  });
 };
 
-
-exports.createNewUser = async (req, res, next) => {
-  try {
-    let { phoneNumber } = req.body;
-    // check duplicate phoneNumber Number
-    const phoneExist = await User.findOne({ phoneNumber });
-
-    if (phoneExist) {
-      next({ status: 400, message: PHONE_ALREADY_EXISTS_ERR });
-      return;
+exports.stateAPI = (req, res) => {
+  mongoose.connect(process.env.DBURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  });
+  let data;
+  Cities.find().distinct("state", (err, docs) => {
+    if (err) {
+      res.send("error");
     }
-    // create new user
-    const createUser = new User({
-      phoneNumber,
-      // name
-    });
-
-    // save user
-    const user = await createUser.save();
-
-    res.status(200).json({
-      type: "success",
-      message: "Account created OTP sended to mobile number",
-      data: {
-        userId: user._id,
-      },
-    });
-
-    // generate otp
-    const otp = generateOTP(6);
-    // save otp to user collection
-    user.phoneOtp = otp;
-    await user.save();
-    // send otp to phoneNumber number
-    await fast2sms(
-      {
-        message: `Your OTP is ${otp}`,
-        contactNumber: user.phoneNumber,
-      },
-      next
-    );
-  } catch (error) {
-    console.log(error);
-  }
+    data = docs;
+  });
+  setTimeout(() => {
+    // console.log(data);
+    res.status(200).json(JSON.parse(JSON.stringify(Object.assign({}, data))));
+  }, 50);
 };
 
+exports.cityAPI = (req, res) => {
+  mongoose.connect(process.env.DBURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  });
+  if (req.param("stateName")) {
+    let data;
+    Cities.find({ state: req.param("stateName") }, (err, docs) => {
+      if (err) {
+        res.send("error");
+      }
+      myCities = new Array();
+      docs.forEach((item) => {
+        temp = item.name;
+        if (!myCities.includes(temp)) {
+          myCities.push(temp);
+        }
+      });
+      data = myCities;
+    });
+    setTimeout(() => {
+      // console.log(data);
+      res.status(200).json(JSON.parse(JSON.stringify(Object.assign({}, data))));
+    }, 50);
+  } else
+    res
+      .status(400)
+      .json({ msg: `Err: Please send "stateName" with the request` });
+};

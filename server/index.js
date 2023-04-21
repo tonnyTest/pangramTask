@@ -11,7 +11,11 @@ const routes = require("./routes/routes.js");
 const app = express();
 
 mongoose
-  .connect("mongodb+srv://bhadanedinesh49:Dinesh1998@cluster0.3zyoyho.mongodb.net/test")
+  .connect(process.env.DBURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  })
   .then(() => {
     console.log("DB CONNECTED");
   })
@@ -24,9 +28,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+
+
 //My Routes
 app.use("/", routes);
 //Port
-app.listen(process.env.PORT || 8000, () => {
-  console.log(`App is running on ${process.env.PORT || 8000}`);
+app.listen(process.env.PORT, () => {
+  console.log(`App is running on ${process.env.PORT}`);
 });

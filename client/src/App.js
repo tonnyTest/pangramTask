@@ -1,7 +1,8 @@
 import "./App.css";
 import Login from "./Components/login/LoginForm";
-import OtpVerify from "./Components/login/OtpVerify";
+import Signup from "./Components/signup/Signup";
 import Name from "./Components/register/Name";
+import ManagerDashboard from "./Components/dashboard/ManagerDashboard";
 
 import {
   BrowserRouter,
@@ -18,7 +19,8 @@ function App() {
         <Routes>
 
           <Route path="/" element={<Login />} />
-          <Route path="/verifyOtp" element={<OtpVerify />} />
+          <Route path="/sign-up" element={<Signup />} />
+          <Route path="/manager-dashboard" element={<ManagerDashboard />} />
           <Route path="/user-name" element={<Name />} />
           
         </Routes>

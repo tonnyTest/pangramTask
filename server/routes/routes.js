@@ -1,20 +1,17 @@
 const express = require("express");
 
 let {
-  loginWithPhoneOtp ,
-  verifyPhoneOtp ,
-  createNewUser
+  registration,
+  login,
+  stateAPI,
+  cityAPI,
 } = require("../controllers/controllers.js");
 
 let router = express.Router();
-// send otp
-router.post("/newuser", createNewUser );
 
-// send otp
-router.post("/sendotp", loginWithPhoneOtp );
-// verify otp
-router.post("/verifyotp", verifyPhoneOtp);
+router.post("/reg", registration);
+router.post("/login", login);
+router.get("/stateAPI", stateAPI);
+router.get("/cityAPI", cityAPI);
 
-module.exports = router;  
-
-
+module.exports = router;
