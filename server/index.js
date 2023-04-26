@@ -11,11 +11,7 @@ const routes = require("./routes/routes.js");
 const app = express();
 
 mongoose
-  .connect(process.env.DBURL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-  })
+  .connect("mongodb://localhost:27017/pangramDb")
   .then(() => {
     console.log("DB CONNECTED");
   })
@@ -33,6 +29,6 @@ app.use(cookieParser());
 //My Routes
 app.use("/", routes);
 //Port
-app.listen(process.env.PORT, () => {
-  console.log(`App is running on ${process.env.PORT}`);
+app.listen(process.env.PORT || 8000, () => {
+  console.log(`App is running on ${process.env.PORT || 8000}`);
 });

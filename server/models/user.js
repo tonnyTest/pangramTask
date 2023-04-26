@@ -1,20 +1,24 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  // _id: {
-  //   type: mongoose.Types.ObjectId,
-  //   required:false
-  // },
-  fullName: {
+  fname: {
     type: String,
     trim: true,
-    required: "Full Name of user is required",
+    required: "First Name is required",
   },
-  username:{
-      type:String,
-      trim:true,
-      required:"Username is required",
-      unique:true
+  lname:{
+    type:String,
+    trim:true,
+    required:"Last Name is required",
+    unique:true 
+  },
+  gender: {
+    type: String,
+    required: "Gender is required",
+  },
+  hobbies: {
+    type: String,
+    required: "Hobbies is required",
   },
   email: {
     type: String,
@@ -27,13 +31,20 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: "password is required",
   },
-  state: {
-    type: String,
-    required: "please select state from drop down",
-  },
   city: {
-    type: String,
-    required: "Please select city from drop down",
+    type: String
+  },
+  employeeType: {
+    type: String
+  },
+  department: {
+    type: String
+  },
+  category: {
+    type: String
+  },
+  salary: {
+    type: String
   },
 });
 

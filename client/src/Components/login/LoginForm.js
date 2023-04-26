@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { Link , useNavigate } from 'react-router-dom';
-import "./index.css";
+
 
 const LoginForm =()=> {
     const [email, setEmail] = useState("");
@@ -10,19 +10,28 @@ const LoginForm =()=> {
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
+        console.warn("data",email,password)
         e.preventDefault();
-            axios.post('http://localhost:8000/sendotp',{
+            axios.post('http://localhost:8000/login',{
                 mode: 'no-cors',
                 email: email,
                 password: password
             })
             .then((response) => {
-                if(response.data.message){
-                    setLoginStatus(response.data.message);
-                    console.warn(response);
+                if(response.data.token){
+                    if(response.data.user.employeeType == "Manager"){
+                        navigate("/manager-dashboard");
+                        console.warn(response.data);
+                    }else{
+                        let empRes = response.data.user
+                        navigate('/employee-dashboard', {
+                            state: {empRes}
+                        });
+                        console.warn(response.data);
+                    }
                 }else{
-                    navigate("/manager-dashboard");
                     console.warn(response);
+                    alert(response.data.msg)
                 }
             })
             .catch(err => {
@@ -33,34 +42,38 @@ const LoginForm =()=> {
     return (
         <div className="container-fluid">
             <div className="container">
-                <div className="row col-md-12" >
+                <div className="row col-md-12 m-5" >
                     <div className="col-md-3"></div>
-                    <div className="col-md-6 cust-bg">
+                    <div className="col-md-6 ">
                         <form method="post">
                             <div className="login-wrap">
-                                <h3>Login Form</h3>
+                                <h3 className="text-center">Login Form</h3>
                              
-                                <div class="form-group">
+                                <div className="form-group mt-4">
                                     <span>Email</span>
                                     <input type="text"
-                                        class="form-control"
+                                        className="form-control"
                                         id="exampleInputEmail1"
                                         onChange={(e) => setEmail(e.target.value)} value={email}
                                         aria-describedby="emailHelp" />
                                 </div>
 
-                                <div class="form-group">
+                                <div className="form-group mt-4">
                                     <span>Password</span>
                                     <input type="password"
-                                        class="form-control"
-                                        id="exampleInputEmail1"
+                                        className="form-control"
+                                        id="exampleInputPassword"
                                         onChange={(e) => setPassword(e.target.value)} value={password}
                                         aria-describedby="emailHelp" />
                                 </div>
 
-                                <div className="sps-sign">
-                                    <button className="btn-btn" onClick={(e) => handleSubmit(e)} >Login</button>
+                                <div className="sps-sign mt-4 col-md-12" >
+                                    <button className="btn btn-primary" style={{ width: "100%"}} onClick={(e) => handleSubmit(e)} >Login</button>
                                 </div>
+                                <div className="sps-sign mt-3" style={{ textAlign: "end"}}>
+                                  <Link to="/sign-up" className="btn-btn" style={{color:"blue"}}>Sign Up ?</Link>
+                                </div>
+
 
                             </div>
                         </form>
